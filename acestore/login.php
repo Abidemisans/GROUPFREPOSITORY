@@ -15,7 +15,7 @@
         if ($rows == 1) {
             $_SESSION['username'] = $username;
             // Redirect to user dashboard page
-            header("Location: index.html");
+            header("Location: shoppage.php");
         } else {
             echo "Incorrect Username or Password";
         }

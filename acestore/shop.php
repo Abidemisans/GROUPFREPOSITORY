@@ -1,3 +1,55 @@
+<?php
+// Include database connection
+require_once('./connection.php');
+
+// Define search term
+$search_term = isset($_GET['search']) ? $_GET['search'] : '';
+
+// Build SQL query
+$sql = "SELECT p.product_id, p.name, p.brand, p.category, p.price, p.description,
+  CONCAT('[', REGEXP_REPLACE(GROUP_CONCAT(
+    CONCAT('{',
+      'variant_id:', v.variant_id,
+      ',color:', v.color,
+      ',size:', v.size,
+      ',price:', v.price,
+      ',stock_count:', v.stock_count,
+      ',discount:', v.discount,
+      '}'
+    )
+    SEPARATOR ','), ',null', ']')
+  ) AS variants,
+  CONCAT('[', REGEXP_REPLACE(GROUP_CONCAT(
+    CONCAT('{',
+      'image_id:', i.image_id,
+      ',image_url:', i.image_url,
+      '}'
+    )
+    SEPARATOR ','), ',null', ']')
+  ) AS images
+FROM fashion_product p
+LEFT JOIN fashion_product_variant v ON p.product_id = v.product_id
+LEFT JOIN fashion_product_image i ON p.product_id = i.product_id";
+
+// Add search term to query if provided
+if (!empty($search_term)) {
+  $sql .= " WHERE p.name LIKE '%" . $search_term . "%'";
+}
+
+$sql .= " GROUP BY p.product_id";
+
+// Execute query
+$result = $con->query($sql);
+
+// Check for errors
+if (!$result) {
+  die("Error executing query: " . $con->error);
+}
+
+// Close database connection
+$con->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +57,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Blog | E-Shopper</title>
+    <title>Shop | Acestore</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet">
     <link href="css/prettyPhoto.css" rel="stylesheet">
@@ -29,7 +81,7 @@
 		<div class="header_top"><!--header_top-->
 			<div class="container">
 				<div class="row">
-					<div class="col-sm-6">
+					<div class="col-sm-6 ">
 						<div class="contactinfo">
 							<ul class="nav nav-pills">
 								<li><a href=""><i class="fa fa-phone"></i> +2 95 01 88 821</a></li>
@@ -113,18 +165,18 @@
 						<div class="mainmenu pull-left">
 							<ul class="nav navbar-nav collapse navbar-collapse">
 								<li><a href="index.html">Home</a></li>
-								<li class="dropdown"><a href="#">Shop<i class="fa fa-angle-down"></i></a>
+								<li class="dropdown"><a href="#" class="active">Shop<i class="fa fa-angle-down"></i></a>
                                     <ul role="menu" class="sub-menu">
-                                        <li><a href="shop.html">Products</a></li>
+                                        <li><a href="shop.html" class="active">Products</a></li>
 										<li><a href="product-details.html">Product Details</a></li> 
 										<li><a href="checkout.html">Checkout</a></li> 
 										<li><a href="cart.html">Cart</a></li> 
 										<li><a href="login.html">Login</a></li> 
                                     </ul>
                                 </li> 
-								<li class="dropdown"><a href="#" class="active">Blog<i class="fa fa-angle-down"></i></a>
+								<li class="dropdown"><a href="#">Blog<i class="fa fa-angle-down"></i></a>
                                     <ul role="menu" class="sub-menu">
-                                        <li><a href="blog.html" class="active">Blog List</a></li>
+                                        <li><a href="blog.html">Blog List</a></li>
 										<li><a href="blog-single.html">Blog Single</a></li>
                                     </ul>
                                 </li> 
@@ -134,14 +186,25 @@
 						</div>
 					</div>
 					<div class="col-sm-3">
-						<div class="search_box pull-right">
-							<input type="text" placeholder="Search"/>
-						</div>
+						<form action="shop.php" method="get">
+							<div class="search_box pull-right">
+								<input type="text" name="search" id="search" value="<?php echo htmlspecialchars($search_term); ?>" placeholder="Search"/>
+							</div>
+							<button type="submit" class="pull-right">
+								Search
+							</button>
+						</form>
 					</div>
 				</div>
+				</div>
 			</div>
-		</div><!--/header-bottom-->
-	</header><!--/header-->
+	</header>
+	
+	<section id="advertisement">
+		<div class="container">
+			<img src="images/shop/advertisement.jpg" alt="" />
+		</div>
+	</section>
 	
 	<section>
 		<div class="container">
@@ -254,7 +317,7 @@
 									<h4 class="panel-title"><a href="#">Shoes</a></h4>
 								</div>
 							</div>
-						</div><!--/category-products-->
+						</div><!--/category-productsr-->
 					
 						<div class="brands_products"><!--brands_products-->
 							<h2>Brands</h2>
@@ -282,86 +345,51 @@
 						<div class="shipping text-center"><!--shipping-->
 							<img src="images/home/shipping.jpg" alt="" />
 						</div><!--/shipping-->
+						
 					</div>
 				</div>
-				<div class="col-sm-9">
-					<div class="blog-post-area">
-						<h2 class="title text-center">Latest From our Blog</h2>
-						<div class="single-blog-post">
-							<h3>Girls Pink T Shirt arrived in store</h3>
-							<div class="post-meta">
-								<ul>
-									<li><i class="fa fa-user"></i> Mac Doe</li>
-									<li><i class="fa fa-clock-o"></i> 1:33 pm</li>
-									<li><i class="fa fa-calendar"></i> DEC 5, 2013</li>
-								</ul>
-								<span>
-										<i class="fa fa-star"></i>
-										<i class="fa fa-star"></i>
-										<i class="fa fa-star"></i>
-										<i class="fa fa-star"></i>
-										<i class="fa fa-star-half-o"></i>
-								</span>
-							</div>
-							<a href="">
-								<img src="images/blog/blog-one.jpg" alt="">
+				
+				<div class="col-sm-9 padding-right">
+					<div class="features_items"><!--features_items-->
+						<h2 class="title text-center">Features Items</h2>
+
+						<?php 
+						  	if ($result->num_rows > 0){ 
+								while ($row = $result->fetch_assoc()){
+						?>
+						<div class="col-sm-4">
+							<a class="product-image-wrapper" href="product-details.php?product_id=<?php echo $row['product_id']?>">
+								<div class="single-products">
+									<div class="productinfo text-center">
+										<img src="images/shop/product12.jpg" alt="" />
+										<h2>$<?php echo number_format($row['price'], 2); ?></h2>
+										<p><?php echo htmlspecialchars($row['name']); ?></p>
+										<a href="#" class="btn btn-default add-to-cart"><i class="fa fa-shopping-cart"></i>Add to cart</a>
+									</div>
+								</div>
+
+
+								<!-- <div class="choose">
+									<ul class="nav nav-pills nav-justified">
+										<li><a href=""><i class="fa fa-plus-square"></i>Add to wishlist</a></li>
+										<li><a href=""><i class="fa fa-plus-square"></i>Add to compare</a></li>
+									</ul>
+								</div> -->
 							</a>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-							<a  class="btn btn-primary" href="">Read More</a>
 						</div>
-						<div class="single-blog-post">
-							<h3>Girls Pink T Shirt arrived in store</h3>
-							<div class="post-meta">
-								<ul>
-									<li><i class="fa fa-user"></i> Mac Doe</li>
-									<li><i class="fa fa-clock-o"></i> 1:33 pm</li>
-									<li><i class="fa fa-calendar"></i> DEC 5, 2013</li>
-								</ul>
-								<span>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star-half-o"></i>
-								</span>
-							</div>
-							<a href="">
-								<img src="images/blog/blog-two.jpg" alt="">
-							</a>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-							<a  class="btn btn-primary" href="">Read More</a>
-						</div>
-						<div class="single-blog-post">
-							<h3>Girls Pink T Shirt arrived in store</h3>
-							<div class="post-meta">
-								<ul>
-									<li><i class="fa fa-user"></i> Mac Doe</li>
-									<li><i class="fa fa-clock-o"></i> 1:33 pm</li>
-									<li><i class="fa fa-calendar"></i> DEC 5, 2013</li>
-								</ul>
-								<span>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star"></i>
-									<i class="fa fa-star-half-o"></i>
-								</span>
-							</div>
-							<a href="">
-								<img src="images/blog/blog-three.jpg" alt="">
-							</a>
-							<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-							<a  class="btn btn-primary" href="">Read More</a>
-						</div>
-						<div class="pagination-area">
+						<?php }}?>
+
+						
+
+						</div><!--features_items-->
+						<div class="row">
 							<ul class="pagination">
-								<li><a href="" class="active">1</a></li>
+								<li class="active"><a href="">1</a></li>
 								<li><a href="">2</a></li>
 								<li><a href="">3</a></li>
-								<li><a href=""><i class="fa fa-angle-double-right"></i></a></li>
+								<li><a href="">&raquo;</a></li>
 							</ul>
 						</div>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -517,7 +545,7 @@
 		<div class="footer-bottom">
 			<div class="container">
 				<div class="row">
-					<p class="pull-left">Copyright © 2013 E-SHOPPER Inc. All rights reserved.</p>
+					<p class="pull-left">Copyright © 2013 E-Shopper. All rights reserved.</p>
 					<p class="pull-right">Designed by <span><a target="_blank" href="http://www.themeum.com">Themeum</a></span></p>
 				</div>
 			</div>
@@ -529,7 +557,7 @@
   
     <script src="js/jquery.js"></script>
 	<script src="js/price-range.js"></script>
-	<script src="js/jquery.scrollUp.min.js"></script>
+    <script src="js/jquery.scrollUp.min.js"></script>
 	<script src="js/bootstrap.min.js"></script>
     <script src="js/jquery.prettyPhoto.js"></script>
     <script src="js/main.js"></script>

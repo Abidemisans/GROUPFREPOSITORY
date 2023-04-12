@@ -14,7 +14,7 @@
                    VALUES ('$username', '" . md5($password) . "', '$email')";
         $result   = mysqli_query($con, $query);
         if ($result) {
-            header("Location: index.html");
+            header("Location: shoppage.php");
         } else {
             echo "Required fields are missing";
         }
